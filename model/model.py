@@ -11,7 +11,7 @@ class Model:
         self._valore_ottimo: int = -1
         self._costo = 0
 
-        # TODO: Aggiungere eventuali altri attributi
+
 
         # Caricamento
         self.load_tour()
@@ -89,62 +89,61 @@ class Model:
 
         return self._pacchetto_ottimo, self._costo, self._valore_ottimo
 
-    def _ricorsione(self, start_index: int, tours: list, pacchetto_parziale: list,
-                durata_corrente: int, costo_corrente: float,
-                valore_corrente: int, attrazioni_usate: set,
-                max_giorni, max_budget):
-        """ Algoritmo di ricorsione che deve trovare il pacchetto che massimizza il valore culturale"""
+    def _ricorsione(self, start_index, tours, pacchetto_parziale,
+                    durata_corrente, costo_corrente, valore_corrente,
+                    attrazioni_usate, max_giorni, max_budget):
+        """ Backtracking per massimizzare il valore culturale """
+
+        # Aggiorna pacchetto ottimale
         if valore_corrente > self._valore_ottimo:
             self._valore_ottimo = valore_corrente
             self._pacchetto_ottimo = list(pacchetto_parziale)
             self._costo = costo_corrente
 
+        # Caso terminale
         if start_index == len(tours):
             return
 
         tour = tours[start_index]
 
+        # NON PRENDERE il tour
         self._ricorsione(
-            start_index + 1, tours,
+            start_index + 1,
+            tours,
             pacchetto_parziale,
-            durata_corrente, costo_corrente,
-            valore_corrente, attrazioni_usate,
-            max_giorni, max_budget
+            durata_corrente,
+            costo_corrente,
+            valore_corrente,
+            attrazioni_usate,
+            max_giorni,
+            max_budget
         )
 
-        # Vincoli
-        if max_giorni is not None and durata_corrente + tour.durata_giorni > max_giorni:
+        #  PRENDERE il tour se possibile
+        if max_giorni is not None and (durata_corrente + tour.durata_giorni )> max_giorni:
+            return
+        if max_budget is not None and( costo_corrente + tour.costo) > max_budget:
             return
 
-        if max_budget is not None and costo_corrente + tour.costo > max_budget:
-            return
-
-        # Attrazioni nuove che porterebbe
         nuove_attr = {a for a in tour.attrazioni if a not in attrazioni_usate}
-
         if not nuove_attr:
-            # Nessun valore culturale nuovo inutile prenderlo
             return
 
-        # Applico la scelta
         pacchetto_parziale.append(tour)
-
-        # creo copie per non modificare il set padre
-        nuove_attrazioni_usate = attrazioni_usate.union(nuove_attr)
-
+        nuove_attr_usate = attrazioni_usate.union(nuove_attr)
         nuovo_valore = valore_corrente + sum(a.valore_culturale for a in nuove_attr)
 
-        # vado avanti
         self._ricorsione(
-            start_index + 1, tours,
+            start_index + 1,
+            tours,
             pacchetto_parziale,
             durata_corrente + tour.durata_giorni,
             costo_corrente + tour.costo,
             nuovo_valore,
-            nuove_attrazioni_usate,
-            max_giorni, max_budget
+            nuove_attr_usate,
+            max_giorni,
+            max_budget
         )
 
-        # bcktrk rimuovo il tour aggiunto
+        # Backtracking: rimuovo il tour aggiunto
         pacchetto_parziale.pop()
-
