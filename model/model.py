@@ -38,8 +38,18 @@ class Model:
             --> Ogni Tour ha un set di Attrazione.
             --> Ogni Attrazione ha un set di Tour.
         """
+        relazioni = TourDAO.get_tour_attrazioni()
+        for coppia in relazioni:
 
-        # TODO
+            coppia_tour = coppia['id_tour']
+            coppia_attrazioni = coppia['id_attrazione']
+
+            tour = self.tour_map[coppia_tour] # recupero l'OGGETTO Tour corrispondente all'id
+            attr = self.attrazioni_map[coppia_attrazioni]
+
+            tour.attrazioni.add(attr)  # aggiungo l'oggetto Attrazione al set di attrazioni del tour
+            attr.tour.add(tour)
+
 
     def genera_pacchetto(self, id_regione: str, max_giorni: int = None, max_budget: float = None):
         """
